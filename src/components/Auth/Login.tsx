@@ -38,7 +38,8 @@ export default function Login({ onToggle }: LoginProps) {
               className="w-16 h-16 rounded-full shadow-md"
             />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome</h1>
           <p className="text-gray-600">Sign in to access your AI loan assistant</p>
         </div>
 
@@ -108,7 +109,7 @@ export default function Login({ onToggle }: LoginProps) {
 
         <div className="mt-8 pt-6 border-t border-gray-200">
           <p className="text-xs text-gray-500 text-center">
-            Demo: Use demo@tata.com / demo123 to test
+            Demo: Use demo@tata.com / 123456 to test
           </p>
         </div>
       </div>
