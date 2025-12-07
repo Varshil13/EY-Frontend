@@ -46,7 +46,7 @@ export default function Signup({ onToggle }: SignupProps) {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <img
-              src="/favicon.png"
+              src="/public/favicon.png"
               alt="App Logo"
               className="w-16 h-16 rounded-full shadow-md"
             />
