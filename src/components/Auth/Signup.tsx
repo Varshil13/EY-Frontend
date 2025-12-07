@@ -44,8 +44,12 @@ export default function Signup({ onToggle }: SignupProps) {
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md transform transition-all hover:scale-[1.01]">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-cyan-600 rounded-full mb-4">
-            <UserPlus className="w-8 h-8 text-white" />
+          <div className="flex items-center justify-center mb-4">
+            <img
+              src="/favicon.png"
+              alt="App Logo"
+              className="w-16 h-16 rounded-full shadow-md"
+            />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
           <p className="text-gray-600">Join the future of AI-powered lending</p>
