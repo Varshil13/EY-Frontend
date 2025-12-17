@@ -1,67 +1,99 @@
-import { useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { DollarSign, Calendar, FileText, Loader2, CheckCircle } from 'lucide-react';
+import { LoanRecommendationService } from '../../lib/loanRecommendationService';
+import { Loan, LoanEligibilityResult } from '../../types';
+import { DollarSign, Calendar, FileText, Loader2, Target, Building2, Star, Filter, CheckCircle } from 'lucide-react';
 
 export default function LoanApplicationForm() {
-  const [amount, setAmount] = useState('');
-  const [purpose, setPurpose] = useState('');
-  const [tenure, setTenure] = useState('12');
+  const [loanType, setLoanType] = useState('personal');
+  const [requestedAmount, setRequestedAmount] = useState('');
+  const [requestedTenure, setRequestedTenure] = useState('3');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [eligibilityResult, setEligibilityResult] = useState<LoanEligibilityResult | null>(null);
+  const [filteredLoans, setFilteredLoans] = useState<Loan[]>([]);
   const [error, setError] = useState('');
-  const { profile } = useAuth();
+  const { user } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  // Calculate maximum eligible amount based on income
+  const maxEligibleAmount = user ? Math.min(user.monthly_income * 60, 5000000) : 0;
+
+  useEffect(() => {
+    if (user) {
+      loadRecommendations();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    filterLoans();
+  }, [eligibilityResult, loanType, requestedAmount]);
+
+  const loadRecommendations = async () => {
+    if (!user) return;
+    
     setLoading(true);
+    setError('');
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const result = await LoanRecommendationService.findEligibleLoans(user);
+      setEligibilityResult(result);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-loan-application`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session?.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            amount: parseFloat(amount),
-            purpose,
-            tenure_months: parseInt(tenure),
-            user_data: {
-              monthly_income: profile?.monthly_income || 50000,
-              employment_type: profile?.employment_type || 'Salaried',
-              pan_number: profile?.pan_number,
-            },
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit application');
+      // Save recommendations
+      if (result.eligible && result.recommended_loans.length > 0) {
+        const loanIds = result.recommended_loans.map(loan => loan.loan_id);
+        await LoanRecommendationService.saveRecommendations(user.profile_id, loanIds);
       }
 
-      setSuccess(true);
-      setTimeout(() => {
-        setSuccess(false);
-        setAmount('');
-        setPurpose('');
-        setTenure('12');
-      }, 3000);
     } catch (err: any) {
-      setError(err.message || 'Failed to submit application');
+      setError(err.message || 'Failed to load recommendations');
     } finally {
       setLoading(false);
     }
   };
 
-  const maxEligibleAmount = (profile?.monthly_income || 50000) * 60;
+  const filterLoans = () => {
+    if (!eligibilityResult) return;
+
+    let loans = eligibilityResult.recommended_loans.filter(loan => loan.loan_type === loanType);
+
+    // Filter by requested amount if specified
+    if (requestedAmount) {
+      const amount = parseInt(requestedAmount);
+      loans = loans.filter(loan => 
+        amount >= loan.min_amount && amount <= loan.max_amount
+      );
+    }
+
+    // Sort by interest rate (ascending)
+    loans.sort((a, b) => a.interest_rate - b.interest_rate);
+
+    setFilteredLoans(loans);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !requestedAmount) return;
+
+    setLoading(true);
+    setError('');
+    
+    try {
+      // Simulate loan application submission
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setSuccess(true);
+      
+      // Reset form after success
+      setTimeout(() => {
+        setSuccess(false);
+        setRequestedAmount('');
+        setRequestedTenure('3');
+      }, 3000);
+    } catch (err: any) {
+      setError('Failed to submit application. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
@@ -70,7 +102,7 @@ export default function LoanApplicationForm() {
         <p className="text-gray-600">
           Fill out the form below and our AI agents will process your application instantly
         </p>
-        {profile?.monthly_income && (
+        {user?.monthly_income && (
           <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
               Based on your income, you're eligible for loans up to{' '}
@@ -106,8 +138,8 @@ export default function LoanApplicationForm() {
             <input
               id="amount"
               type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              value={requestedAmount}
+              onChange={(e) => setRequestedAmount(e.target.value)}
               required
               min="50000"
               max={maxEligibleAmount}

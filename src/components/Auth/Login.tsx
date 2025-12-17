@@ -19,9 +19,23 @@ export default function Login({ onToggle }: LoginProps) {
     setLoading(true);
 
     try {
+      console.log('Attempting login with email:', email);
       await signIn(email, password);
+      console.log('Login successful');
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in');
+      console.error('Login error:', err);
+      let errorMessage = err.message || 'Failed to sign in';
+      
+      // Provide user-friendly error messages
+      if (errorMessage.includes('Invalid login credentials')) {
+        errorMessage = 'Invalid email or password. Please check your credentials.';
+      } else if (errorMessage.includes('Email not confirmed')) {
+        errorMessage = 'Please check your email and confirm your account.';
+      } else if (errorMessage.includes('Too many requests')) {
+        errorMessage = 'Too many login attempts. Please try again later.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

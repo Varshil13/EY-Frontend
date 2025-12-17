@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Auth/Login';
 import Signup from './components/Auth/Signup';
-import Onboarding from './components/Auth/Onboarding';
 import MainLayout from './components/Layout/MainLayout';
 import { Loader2 } from 'lucide-react';
 
 function AppContent() {
   const [showLogin, setShowLogin] = useState(true);
-  const { user, profile, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -27,10 +26,6 @@ function AppContent() {
     ) : (
       <Signup onToggle={() => setShowLogin(true)} />
     );
-  }
-
-  if (profile && !profile.onboarding_complete) {
-    return <Onboarding />;
   }
 
   return <MainLayout />;

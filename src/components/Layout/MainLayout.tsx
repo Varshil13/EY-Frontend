@@ -14,8 +14,10 @@ import Dashboard from '../Dashboard/Dashboard';
 import Chatbot from '../Chatbot/Chatbot';
 import LoanApplicationForm from '../LoanForm/LoanApplicationForm';
 import Profile from '../Profile/Profile'; // ✅ New Profile component (you create this)
+import { RecommendedLoans } from '../Dashboard/RecommendedLoans';
+import { AppliedLoans } from '../Dashboard/AppliedLoans';
 
-type Tab = 'dashboard' | 'chat' | 'apply' | 'profile'; // ✅ Added 'profile'
+type Tab = 'dashboard' | 'chat' | 'recommended' | 'apply' | 'profile'; // ✅ Added 'recommended'
 
 export default function MainLayout() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -33,7 +35,8 @@ export default function MainLayout() {
   const tabs = [
     { id: 'dashboard' as Tab, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'chat' as Tab, label: 'AI Assistant', icon: MessageSquare },
-    { id: 'apply' as Tab, label: 'Apply Now', icon: FileText },
+    { id: 'recommended' as Tab, label: 'Recommendation', icon: FileText },
+    { id: 'apply' as Tab, label: 'Apply', icon: FileText },
     { id: 'profile' as Tab, label: 'Profile', icon: User }, // ✅ New tab
   ];
 
@@ -48,7 +51,7 @@ export default function MainLayout() {
                   <Bot className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">Tata Capital AI (Prototype)</h1>
+                  <h1 className="text-xl font-bold text-gray-900">Tata Capital AI Prototype</h1>
                   <p className="text-xs text-gray-500">Agentic Loan Assistant</p>
                 </div>
               </div>
@@ -152,9 +155,23 @@ export default function MainLayout() {
           </div>
         )}
 
+        {activeTab === 'recommended' && (
+          <div className="bg-white rounded-xl shadow-lg">
+            <div className="border-b border-gray-200 px-6 py-4">
+              <h2 className="text-2xl font-bold text-gray-900">Recommended Loans</h2>
+              <p className="text-gray-600 text-sm mt-1">All loans recommended to you from the AI Assistant</p>
+            </div>
+            <RecommendedLoans />
+          </div>
+        )}
+
         {activeTab === 'apply' && (
-          <div className="max-w-2xl mx-auto">
-            <LoanApplicationForm />
+          <div className="bg-white rounded-xl shadow-lg">
+            <div className="border-b border-gray-200 px-6 py-4">
+              <h2 className="text-2xl font-bold text-gray-900">Applied Loans</h2>
+              <p className="text-gray-600 text-sm mt-1">Loans you have applied for</p>
+            </div>
+            <AppliedLoans />
           </div>
         )}
 
