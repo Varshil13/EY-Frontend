@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { User, Mail, Briefcase, Phone, MapPin, BadgeCheck, DollarSign, TrendingUp, FileText, CreditCard, Edit2, Save, X } from 'lucide-react';
+import { User, BadgeCheck, Edit2, Save, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { buildApiUrl, API_CONFIG } from '../../config/api';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -83,19 +82,7 @@ export default function Profile() {
     }
   };
 
-  const getStatusColor = (field: string, value: any) => {
-    if (!value) return 'bg-gray-50';
-    if (field === 'credit_score' && value >= 700) return 'bg-green-50';
-    if (field === 'monthly_income' && value >= 50000) return 'bg-green-50';
-    return 'bg-blue-50';
-  };
 
-  const getStatusIcon = (field: string, value: any) => {
-    if (!value) return null;
-    if (field === 'credit_score' && value >= 700) return '✓';
-    if (field === 'monthly_income' && value >= 50000) return '✓';
-    return null;
-  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -149,7 +136,7 @@ export default function Profile() {
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
           <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">Credit Score</p>
           <p className="text-2xl font-bold text-slate-900">{formData.credit_score || '—'}</p>
-          {formData.credit_score >= 700 && <p className="text-xs text-green-600">Excellent</p>}
+          {Number(formData.credit_score) >= 700 && <p className="text-xs text-green-600">Excellent</p>}
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
           <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">Monthly Income</p>

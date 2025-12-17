@@ -153,6 +153,7 @@ export function RecommendedLoans() {
 
   const handleApply = async (loanId: number) => {
     try {
+      console.log("env variable:", import.meta.env.VITE_API_BASE_URL);
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
