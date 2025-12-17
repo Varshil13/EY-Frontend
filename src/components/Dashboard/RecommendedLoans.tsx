@@ -48,25 +48,69 @@ export function RecommendedLoans() {
 
   const fetchAppliedLoans = async () => {
     try {
-      console.log('📡 fetchAppliedLoans: Starting API call');
-      console.log('🌐 API URL:', `${import.meta.env.VITE_API_BASE_URL}/applied-loans/${user?.profile_id}`);
+      console.log('📡 fetchAppliedLoans: Starting Supabase query');
+      console.log('👤 fetchAppliedLoans: User profile_id:', user?.profile_id);
       
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/applied-loans/${user?.profile_id}`);
-      console.log('📡 fetchAppliedLoans: Response status:', res.status, res.ok);
-      
-      if (!res.ok) {
-        console.log('❌ fetchAppliedLoans: Response not ok, returning');
+      if (!user?.profile_id) {
+        console.log('❌ fetchAppliedLoans: No user profile_id');
+        return;
+      }
+
+      // Query user_applications table directly
+      const { data, error } = await supabase
+        .from('user_applications')
+        .select('loan_id')
+        .eq('profile_id', user.profile_id);
+
+      console.log('📡 fetchAppliedLoans: Supabase query completed');
+      console.log('📡 fetchAppliedLoans: Error:', error);
+      console.log('📡 fetchAppliedLoans: Raw data:', data);
+
+      if (error) {
+        console.error('❌ fetchAppliedLoans: Supabase error:', error);
         return;
       }
       
-      const data = await res.json();
-      console.log('📡 fetchAppliedLoans: Response data:', data);
-      
-      const appliedIds = new Set<number>(data.applied_loans?.map((l: any) => Number(l.loan_id)).filter((id: number) => !isNaN(id)) || []);
+      const appliedIds = new Set<number>(data?.map((app: any) => Number(app.loan_id)).filter((id: number) => !isNaN(id)) || []);
       console.log('📡 fetchAppliedLoans: Applied loan IDs:', Array.from(appliedIds));
       setAppliedLoans(appliedIds);
     } catch (err) {
       console.error('❌ fetchAppliedLoans: Error occurred:', err);
+    }
+  };
+
+  const fetchAppliedLoansWithoutOverride = async (recentlyAppliedLoanId: number) => {
+    try {
+      console.log('📡 fetchAppliedLoansWithoutOverride: Starting Supabase query');
+      
+      if (!user?.profile_id) {
+        console.log('❌ fetchAppliedLoansWithoutOverride: No user profile_id');
+        return;
+      }
+
+      // Query user_applications table directly
+      const { data, error } = await supabase
+        .from('user_applications')
+        .select('loan_id')
+        .eq('profile_id', user.profile_id);
+      
+      if (error) {
+        console.error('❌ fetchAppliedLoansWithoutOverride: Supabase error:', error);
+        return;
+      }
+      
+      const appliedIds = new Set<number>(data?.map((app: any) => Number(app.loan_id)).filter((id: number) => !isNaN(id)) || []);
+      
+      // Only update state if the recently applied loan is in the response
+      // This prevents overriding optimistic updates with stale data
+      if (appliedIds.has(recentlyAppliedLoanId)) {
+        console.log('✅ fetchAppliedLoansWithoutOverride: Recently applied loan found in DB, updating state');
+        setAppliedLoans(appliedIds);
+      } else {
+        console.log('⚠️ fetchAppliedLoansWithoutOverride: Recently applied loan not found in DB, keeping optimistic state');
+      }
+    } catch (err) {
+      console.error('❌ fetchAppliedLoansWithoutOverride: Error occurred:', err);
     }
   };
 
@@ -154,6 +198,40 @@ export function RecommendedLoans() {
   const handleApply = async (loanId: number) => {
     try {
       console.log("env variable:", import.meta.env.VITE_API_BASE_URL);
+      
+      // Check if loan is already applied
+      if (appliedLoans.has(loanId)) {
+        // Remove from recommendations table
+        console.log(`🗑️ Removing loan ${loanId} from user_loan_reco table`);
+        
+        const { error } = await supabase
+          .from('user_loan_reco')
+          .delete()
+          .eq('profile_id', user?.profile_id)
+          .eq('loan_id', loanId);
+
+        if (error) {
+          console.error('❌ Error removing recommendation:', error);
+          alert('Error removing recommendation: ' + error.message);
+          return;
+        }
+
+        // Remove from local state
+        setRecommendations(prev => prev.filter(loan => loan.loan_id !== loanId));
+        setAppliedLoans(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(loanId);
+          return newSet;
+        });
+
+        console.log(`✅ Successfully removed loan ${loanId} from recommendations`);
+        return;
+      }
+      
+      // If not applied, proceed with application
+      // Optimistically update UI first
+      setAppliedLoans(prev => new Set([...prev, loanId]));
+      
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -163,16 +241,23 @@ export function RecommendedLoans() {
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to apply for loan');
+      if (!res.ok) {
+        // If API call fails, revert the optimistic update
+        setAppliedLoans(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(loanId);
+          return newSet;
+        });
+        throw new Error('Failed to apply for loan');
+      }
 
-      // Add loan to applied set immediately
-      setAppliedLoans(prev => new Set([...prev, loanId]));
-
-      // Refetch applied loans to sync
+      // Dispatch event for other components
+      window.dispatchEvent(new Event('appliedLoansUpdated'));
+      
+      // Refetch after a longer delay to ensure backend is updated
       setTimeout(() => {
-        fetchAppliedLoans();
-        window.dispatchEvent(new Event('appliedLoansUpdated'));
-      }, 500);
+        fetchAppliedLoansWithoutOverride(loanId);
+      }, 2000);
     } catch (err: any) {
       console.error('Error applying for loan:', err);
       alert('Error applying for loan: ' + err.message);
@@ -283,14 +368,13 @@ export function RecommendedLoans() {
 
             <button
               onClick={() => handleApply(loan.loan_id)}
-              disabled={appliedLoans.has(loan.loan_id)}
               className={`w-full font-semibold py-2 rounded-lg transition ${
                 appliedLoans.has(loan.loan_id)
-                  ? 'bg-green-600 text-white cursor-not-allowed'
+                  ? 'bg-red-600 hover:bg-red-700 text-white'
                   : 'bg-blue-600 hover:bg-blue-700 text-white'
               }`}
             >
-              {appliedLoans.has(loan.loan_id) ? '✓ Applied' : 'Apply Now'}
+              {appliedLoans.has(loan.loan_id) ? '🗑️ Remove from Recommendations' : 'Apply Now'}
             </button>
           </div>
         ))}
