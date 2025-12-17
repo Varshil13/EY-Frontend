@@ -1,40 +1,41 @@
-import { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { LogIn, Mail, Lock } from 'lucide-react';
+import { useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { LogIn, Mail, Lock, Bot, UserPlus } from "lucide-react";
 
 interface LoginProps {
   onToggle: () => void;
 }
 
 export default function Login({ onToggle }: LoginProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      console.log('Attempting login with email:', email);
+      console.log("Attempting login with email:", email);
       await signIn(email, password);
-      console.log('Login successful');
+      console.log("Login successful");
     } catch (err: any) {
-      console.error('Login error:', err);
-      let errorMessage = err.message || 'Failed to sign in';
-      
+      console.error("Login error:", err);
+      let errorMessage = err.message || "Failed to sign in";
+
       // Provide user-friendly error messages
-      if (errorMessage.includes('Invalid login credentials')) {
-        errorMessage = 'Invalid email or password. Please check your credentials.';
-      } else if (errorMessage.includes('Email not confirmed')) {
-        errorMessage = 'Please check your email and confirm your account.';
-      } else if (errorMessage.includes('Too many requests')) {
-        errorMessage = 'Too many login attempts. Please try again later.';
+      if (errorMessage.includes("Invalid login credentials")) {
+        errorMessage =
+          "Invalid email or password. Please check your credentials.";
+      } else if (errorMessage.includes("Email not confirmed")) {
+        errorMessage = "Please check your email and confirm your account.";
+      } else if (errorMessage.includes("Too many requests")) {
+        errorMessage = "Too many login attempts. Please try again later.";
       }
-      
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -45,16 +46,16 @@ export default function Login({ onToggle }: LoginProps) {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md transform transition-all hover:scale-[1.01]">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <img
-              src="/favicon.png"
-              alt="App Logo"
-              className="w-16 h-16 rounded-full shadow-md"
-            />
-          </div>
+          
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-full mb-4">
+              <Bot className="w-8 h-8 text-white" />
+            </div>
+          
 
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome</h1>
-          <p className="text-gray-600">Sign in to access your AI loan assistant</p>
+          <p className="text-gray-600">
+            Sign in to access your AI loan assistant
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -65,7 +66,10 @@ export default function Login({ onToggle }: LoginProps) {
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Email Address
             </label>
             <div className="relative">
@@ -83,7 +87,10 @@ export default function Login({ onToggle }: LoginProps) {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Password
             </label>
             <div className="relative">
@@ -105,13 +112,13 @@ export default function Login({ onToggle }: LoginProps) {
             disabled={loading}
             className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02]"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-gray-600">
-            Don't have an account?{' '}
+            Don't have an account?{" "}
             <button
               onClick={onToggle}
               className="text-blue-600 font-semibold hover:text-blue-700 transition-colors"
