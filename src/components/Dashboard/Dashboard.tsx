@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Activity, TrendingUp, BarChart3, Clock, CheckCircle, DollarSign } from 'lucide-react';
+import { Activity,BarChart3, Clock, CheckCircle, DollarSign } from 'lucide-react';
 import AgentTimeline from './AgentTimeline';
 import { supabase } from '../../lib/supabase';
 

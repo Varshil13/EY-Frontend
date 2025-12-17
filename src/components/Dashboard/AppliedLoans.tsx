@@ -32,7 +32,7 @@ export function AppliedLoans() {
   const fetchAppliedLoans = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`http://127.0.0.1:8000/applied-loans/${user?.profile_id}`);
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/applied-loans/${user?.profile_id}`);
       if (!res.ok) throw new Error('Failed to fetch applied loans');
       const data = await res.json();
       setAppliedLoans(data.applied_loans || []);
