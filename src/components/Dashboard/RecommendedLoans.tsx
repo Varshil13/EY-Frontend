@@ -49,9 +49,9 @@ export function RecommendedLoans() {
   const fetchAppliedLoans = async () => {
     try {
       console.log('📡 fetchAppliedLoans: Starting API call');
-      console.log('🌐 API URL:', `http://127.0.0.1:8000/applied-loans/${user?.profile_id}`);
+      console.log('🌐 API URL:', `${import.meta.env.VITE_API_BASE_URL}/applied-loans/${user?.profile_id}`);
       
-      const res = await fetch(`http://127.0.0.1:8000/applied-loans/${user?.profile_id}`);
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/applied-loans/${user?.profile_id}`);
       console.log('📡 fetchAppliedLoans: Response status:', res.status, res.ok);
       
       if (!res.ok) {
@@ -153,7 +153,7 @@ export function RecommendedLoans() {
 
   const handleApply = async (loanId: number) => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/apply', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
